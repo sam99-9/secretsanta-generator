@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools{
-        jdk 'jdk17'
+        jdk 'jdk11'
         maven 'maven3'
     }
     environment{
@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('git-checkout') {
             steps {
-                git 'https://github.com/sam99-9/secretsanta-generator.git'
+                git changelog: false, poll: false, url: 'https://github.com/sam99-9/secretsanta-generator.git'
             }
         }
 
@@ -21,16 +21,19 @@ pipeline {
             }
         }
         
-        stage('Unit Tests') {
+         stage('Sonar Analysis') {
             steps {
-               sh "mvn test"
+                
+                sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.url=http://3.113.19.16:9000/ -Dsonar.login=squ_4f74df6703cc79a604c9f1f2a3d85b9193ce79d8 -Dsonar.projectName=secret-sant \
+                       -Dsonar.java.binaries=. \
+                       -Dsonar.projectKey=secret-Santa '''
             }
         }
         
-		stage('OWASP Dependency Check') {
+		stage('OWASP SCan') {
             steps {
-               dependencyCheck additionalArguments: ' --scan ./ ', odcInstallation: 'DC'
-                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+               dependencyCheck additionalArguments: ' --scan ./', odcInstallation: 'DP'
+               dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
 
